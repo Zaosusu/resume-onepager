@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+{# 段落标题全部可被 YAML 的 labels 覆盖，不填就用中文默认值。
+   想做英文版简历，在 YAML 里整块重写 labels 即可，不必改模板。 #}
+{% set L = d.labels or {} %}
+<html lang="{{ d.lang | default('zh-CN') }}">
+<head>
+<meta charset="utf-8">
+<title>{{ d.name }} · {{ L.doc | default('简历') }}</title>
+<style>{{ css | safe }}</style>
+</head>
+<body>
+<div class="page" style="{% if d.photo_focus %}--photo-focus:{{ d.photo_focus[0] }}% {{ d.photo_focus[1] }}%;{% endif %}{% if d.photo_zoom %}--photo-zoom:{{ d.photo_zoom }};{% endif %}{% if d.photo_height %}--photo-h:{{ d.photo_height }};{% endif %}{% if d.photo_size %}--photo-size:{{ d.photo_size }};{% endif %}">
+
+  {# ══ 左栏 ══ #}
+  <aside class="side">
+    {% if photo_uri %}
+      {% if d.photo_style == 'circle' %}
+    <div class="photo-wrap"><div class="photo-clip"><img src="{{ photo_uri }}" alt=""></div></div>
+      {% else %}
+    <div class="photo-panel"><img src="{{ photo_uri }}" alt=""></div>
+      {% endif %}
+    {% endif %}
+
+    {% if d.contact %}
+    <div class="side-sec">
+      <div class="side-h"><svg><use href="#i-person"/></svg><span class="cn">{{ L.contact_cn | default('联系方式') }}</span><span class="en">{{ L.contact_en | default('/ CONTACT') }}</span></div>
+      {% if d.contact.phone %}<div class="contact-row"><svg><use href="#i-phone"/></svg><span>{{ L.phone | default('电话') }}{{ L.sep | default("：") }}{{ d.contact.phone }}</span></div>{% endif %}
+      {% if d.contact.email %}<div class="contact-row"><svg><use href="#i-mail"/></svg><span>{{ L.email | default('邮箱') }}{{ L.sep | default("：") }}{{ d.contact.email }}</span></div>{% endif %}
+      {% if d.contact.location %}<div class="contact-row"><svg><use href="#i-pin"/></svg><span>{{ L.location | default('坐标') }}{{ L.sep | default("：") }}{{ d.contact.location }}</span></div>{% endif %}
+      {% for k, v in (d.contact.extra or {}).items() %}<div class="contact-row"><svg><use href="#i-pin"/></svg><span>{{ k }}{{ L.sep | default("：") }}{{ v }}</span></div>{% endfor %}
+    </div>
+    {% endif %}
+
+    {% if d.skills %}
+    <div class="side-sec">
+      <div class="side-h"><svg><use href="#i-star"/></svg><span class="cn">{{ L.skills_cn | default('核心技能') }}</span><span class="en">{{ L.skills_en | default('/ SKILLS') }}</span></div>
+      <ul class="side-list">{% for s in d.skills %}<li>{{ s }}</li>{% endfor %}</ul>
+    </div>
+    {% endif %}
+
+    {% if d.awards %}
+    <div class="side-sec">
+      <div class="side-h"><svg><use href="#i-trophy"/></svg><span class="cn">{{ L.awards_cn | default('奖项荣誉') }}</span><span class="en">{{ L.awards_en | default('/ AWARDS') }}</span></div>
+      <ul class="side-list awards">{% for a in d.awards %}<li>{{ a }}</li>{% endfor %}</ul>
+    </div>
+    {% endif %}
+
+    {% if d.quote %}
+    <div class="quote"><span class="mark">&ldquo;</span><p>{{ d.quote | trim | replace('\n', '<br>') | safe }}</p></div>
+    {% endif %}
+  </aside>
+
+  {# ══ 右栏 ══ #}
+  <main class="main">
+    <h1 class="name">{{ d.name }}{% if d.alias %}<span class="alias">（{{ d.alias }}）</span>{% endif %}</h1>
+    {% if d.title %}<div class="title">{{ d.title }}</div>{% endif %}
+
+    {% if d.badges %}
+    <div class="badges" data-n="{{ d.badges | length }}">
+      {% for b in d.badges %}
+      <div class="badge">
+        <div class="badge-ico"><svg><use href="#i-{{ b.icon | default('star') }}"/></svg></div>
+        <div><b>{{ b.main }}</b>{% if b.sub %}<span>{{ b.sub }}</span>{% endif %}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    <div class="rule"></div>
+
+    {% if d.intro %}
+    <section class="sec">
+      <div class="sec-h"><svg><use href="#i-person"/></svg><span class="cn">{{ L.intro_cn | default('自我介绍') }}</span><span class="en">{{ L.intro_en | default('/ SELF INTRODUCTION') }}</span></div>
+      <div class="intro">{{ d.intro | trim | replace('\n', '<br>') | safe }}</div>
+    </section>
+    {% endif %}
+
+    {% if d.experience %}
+    <section class="sec">
+      <div class="sec-h"><svg><use href="#i-briefcase"/></svg><span class="cn">{{ L.experience_cn | default('工作经历') }}</span><span class="en">{{ L.experience_en | default('/ WORK EXPERIENCE') }}</span></div>
+      {% for g in d.experience %}
+      <div class="tl-group">
+        {% if g.role %}<div class="tl-role">{{ g.role }}</div>{% endif %}
+        {% for it in g['items'] %}
+        <div class="tl-item">
+          <div class="tl-period">{{ it.period | default('', true) }}</div>
+          <div class="tl-axis"></div>
+          <div class="tl-text">{{ it.text }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+
+    {# 教育背景 / 项目经历，结构与工作经历完全一致。
+       应届生材料薄，这两段往往是主体，所以单独给出而不是硬塞进 experience。 #}
+    {% if d.education %}
+    <section class="sec">
+      <div class="sec-h"><svg><use href="#i-bank"/></svg><span class="cn">{{ L.education_cn | default('教育背景') }}</span><span class="en">{{ L.education_en | default('/ EDUCATION') }}</span></div>
+      {% for g in d.education %}
+      <div class="tl-group">
+        {% if g.role %}<div class="tl-role">{{ g.role }}</div>{% endif %}
+        {% for it in g['items'] %}
+        <div class="tl-item">
+          <div class="tl-period">{{ it.period | default('', true) }}</div>
+          <div class="tl-axis"></div>
+          <div class="tl-text">{{ it.text }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+
+    {% if d.projects %}
+    <section class="sec">
+      <div class="sec-h"><svg><use href="#i-rocket"/></svg><span class="cn">{{ L.projects_cn | default('项目经历') }}</span><span class="en">{{ L.projects_en | default('/ PROJECTS') }}</span></div>
+      {% for g in d.projects %}
+      <div class="tl-group">
+        {% if g.role %}<div class="tl-role">{{ g.role }}</div>{% endif %}
+        {% for it in g['items'] %}
+        <div class="tl-item">
+          <div class="tl-period">{{ it.period | default('', true) }}</div>
+          <div class="tl-axis"></div>
+          <div class="tl-text">{{ it.text }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+
+    {% if d.competencies %}
+    <section class="sec">
+      <div class="sec-h"><svg><use href="#i-diamond"/></svg><span class="cn">{{ L.competencies_cn | default('核心竞争力') }}</span><span class="en">{{ L.competencies_en | default('/ CORE COMPETENCIES') }}</span></div>
+      <div class="cards">
+        {% for c in d.competencies %}
+        <div class="cardx">
+          <div class="cardx-ico"><svg><use href="#i-{{ c.icon | default('star') }}"/></svg></div>
+          <div><b>{{ c.title }}{{ L.sep | default("：") }}</b><p>{{ c.text }}</p></div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+  </main>
+</div>
+
+{{ icons | safe }}
+</body>
+</html>

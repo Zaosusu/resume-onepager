@@ -1,0 +1,20 @@
+# 渲染产物
+out/
+*_简历.pdf
+*_简历.png
+_resume.html
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 个人数据：把自己的 YAML 和照片放在 my/ 下，不会被提交
+my/
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,60 @@
+# 示例二：材料很薄的应届生（虚构人物，请勿当真）
+# 用途：展示降级行为——没有 awards、没有 quote、只有 1 组经历和 2 张竞争力卡。
+# 这份内容量只有 full.yaml 的一半，脚本会自动放大字号并把余量分摊到段间距，
+# 而不是让下半页空着。渲染时留意终端里 "内容偏少，已整体放大至 …" 这行。
+#
+# 照片用 circle 样式，且不写 photo_focus / photo_zoom ——
+# 只要照片本身是正常的人像取景（头部在画幅上三分之一），默认值就是对的。
+
+name: 周小雨
+title: 前端开发工程师 · 2026 届应届生
+
+photo: assets/placeholder.png
+photo_style: circle
+photo_size: 15rem
+
+badges:
+  - {icon: code,   main: React / TypeScript, sub: 主要技术栈}
+  - {icon: rocket, main: 2 个完整上线项目, sub: 独立负责前端}
+
+contact:
+  phone: "139-0000-0000"
+  email: "example@example.com"
+  location: 成都
+
+skills:
+  - React / TypeScript
+  - Vite / Tailwind CSS
+  - Node.js 基础
+  - Git 协作流程
+
+intro: |
+  计算机科学与技术专业 2026 届本科毕业生，前端方向。课外独立完成两个上线项目，从需求梳理、界面设计到部署全流程自己跑通。学习速度快，习惯把踩过的坑写成文档。希望加入重视工程规范的前端团队，从业务需求做起。
+
+education:
+  - items:
+      - period: 2022-2026年
+        text: 某大学 计算机科学与技术专业 本科，主修课程含数据结构、操作系统、计算机网络、数据库原理，GPA 3.6/4.0。
+      - period: 2024-2025年
+        text: 校内前端技术社团负责人，组织 6 场技术分享，累计参与 200 余人次。
+
+projects:
+  - items:
+      - period: 2025年
+        text: 校园二手书交易平台：React + TypeScript + Node.js 全栈实现，含登录鉴权、商品发布、站内消息，注册用户 400+。
+      - period: 2025年
+        text: 课程表小工具：解析学校教务系统导出数据并生成可订阅日历文件，在同学间自发传播，累计使用 300+ 人。
+
+competencies:
+  - icon: code
+    title: 动手能力
+    text: 两个项目都是从零到上线独立完成，包括域名、部署和线上问题排查，不是只写页面。
+  - icon: pencil
+    title: 学习习惯
+    text: 坚持把踩过的坑整理成公开笔记，累计 40 余篇，被同专业同学作为入门参考。
+
+# 左栏内容少时，加一段 quote 能把栏底填住——否则下半栏会空一大块。
+# 这是内容层面的建议，不是排版 bug：脚本能分摊段间距，但补不出内容。
+quote: |
+  先把东西做出来，
+  再谈把它做好。

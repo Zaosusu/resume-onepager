@@ -1,0 +1,259 @@
+/* ============================================================
+   一页纸简历 · A4 纵向
+   所有可调项集中在 :root。换品牌色只改这里。
+   --fit 由 render_resume.py 注入（一页自适应缩放），不要手改。
+   ============================================================ */
+:root {
+  --accent:       #1D4ED8;   /* 主蓝：段标题、图标、副标题 */
+  --accent-soft:  #3E65DC;   /* 次级蓝 */
+  --accent-blob:  #164ED4;   /* 左下引言色块 */
+  --name:         #092657;   /* 姓名深蓝黑 */
+  --ink:          #1C1C1C;   /* 正文墨色 */
+  --ink-soft:     #5A6172;   /* 弱化文字 */
+  --card:         #EFF3FB;   /* 竞争力卡片底 */
+  --side-top:     #F8F9FC;   /* 左栏渐变起 */
+  --side-bottom:  #E7EBF3;   /* 左栏渐变止 */
+  --side-w:       30%;       /* 左栏宽度占比 */
+  --fit:          1;         /* 整体缩放系数，由脚本注入 */
+  --sec-extra:    0px;       /* 右栏段间补白，由脚本注入（内容偏少时撑满一页） */
+  --side-extra:   0px;       /* 左栏段间补白，同上 */
+}
+
+@page { size: A4; margin: 0; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  /* 全局字号基准，乘以 --fit 实现整体等比缩放 */
+  font-size: calc(10.4pt * var(--fit));
+}
+
+body {
+  /* 拉丁字形优先 Segoe UI / Helvetica Neue，中文按平台回落：
+     PingFang SC = macOS，Microsoft YaHei = Windows，Noto/Source Han = Linux。
+     少了 Linux 那几个，容器和 CI 里渲染出来会是豆腐块。 */
+  font-family: "Segoe UI", "Helvetica Neue", Arial,
+               "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑",
+               "Noto Sans CJK SC", "Source Han Sans SC", "WenQuanYi Micro Hei",
+               sans-serif;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* min-height 而非 height：内容溢出时 scrollHeight 会变大，脚本据此触发缩放 */
+.page {
+  width: 210mm;
+  min-height: 297mm;
+  display: flex;
+  background: #fff;
+  overflow: visible;
+}
+
+/* ── 左栏 ──────────────────────────────────────────────
+   左栏宽度固定 30%，徽章行也是横向三等分——这些是**横向**受限的元素，
+   而 --fit 放大的目的是填**纵向**空白。让它们跟着放大只会把电话号码、
+   邮箱、徽章文案挤到折行。所以下面这些字号统一用
+       calc(Xpt * min(var(--fit), 1))
+   ——只跟随缩小，不跟随放大。 */
+.side {
+  width: var(--side-w);
+  background: linear-gradient(180deg, var(--side-top) 0%, var(--side-bottom) 100%);
+  padding: 2.4rem 1.7rem 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* ── 照片 · panel 版（默认）─────────────────────────────
+   出血到左栏三边，保留原照片的场景信息（讲台、背板、产品页）。
+   负 margin 抵消 .side 的 padding；右下大圆角与左下引言块呼应。 */
+.photo-panel {
+  margin: -2.4rem -1.7rem 2.1rem;
+  height: var(--photo-h, 22rem);
+  flex: none;
+  overflow: hidden;
+  border-bottom-right-radius: 20mm;
+  background: #0E1D33;
+}
+.photo-panel img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: var(--photo-focus, 50% 50%);
+  transform: scale(var(--photo-zoom, 1));
+  transform-origin: var(--photo-focus, 50% 50%);
+  display: block;
+}
+
+/* ── 照片 · circle 版 ───────────────────────────────────
+   尺寸用 rem 显式给定：aspect-ratio 在 flex column 下会被内容自然高度覆盖，导致圆变椭圆 */
+.photo-wrap {
+  width: var(--photo-size, 16rem);
+  height: var(--photo-size, 16rem);
+  flex: none;
+  margin: 0 auto 2.4rem;
+  border-radius: 50%;
+  background: #fff;
+  padding: 0.42rem;               /* 白色圆环 */
+  box-shadow: 0 0.25rem 1.1rem rgba(20, 50, 120, .13);
+}
+.photo-clip {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  overflow: hidden;               /* 裁掉 scale 放大后溢出的部分 */
+}
+.photo-clip img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: var(--photo-focus, 50% 50%);
+  /* 与 object-position 同一原点缩放，放大时焦点保持不动 */
+  transform: scale(var(--photo-zoom, 1));
+  transform-origin: var(--photo-focus, 50% 50%);
+  display: block;
+}
+
+.side-sec { margin-bottom: calc(2.1rem + var(--side-extra, 0px)); }
+.side-sec:last-of-type { margin-bottom: 2.1rem; }
+
+/* flex-wrap + 每段 nowrap：宁可让英文副标题整体换到下一行，
+   也不能把「联系方式」拆成「联系方 / 式」。中日韩文本默认允许任意字间断行。
+   字号用 min(--fit, 1)：左栏宽度是固定的 30%，标题在 100% 时已经顶到栏宽，
+   跟着 --fit 一起放大必然挤到第二行。所以只跟随缩小，不跟随放大。 */
+.side-h {
+  display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+  color: var(--accent);
+  font-size: calc(11.02pt * min(var(--fit), 1));
+  font-weight: 700;
+  margin-bottom: .95rem;
+}
+.side-h > span { white-space: nowrap; }
+.side-h svg { width: 1.35rem; height: 1.35rem; flex: none; }
+/* .en 略小一点：「联系方式 / CONTACT」比「核心技能 / SKILLS」长一个字符，
+   等号大小时前者会挤到第二行、后者不会，两个标题一高一低很难看。 */
+.side-h .en { font-weight: 600; letter-spacing: .02em; font-size: .94em; }
+
+.contact-row {
+  display: flex; align-items: flex-start; gap: .62rem;
+  font-size: calc(9.67pt * min(var(--fit), 1)); line-height: 1.5;
+  margin-bottom: .72rem;
+  word-break: break-all;
+}
+.contact-row svg { width: 1.1rem; height: 1.1rem; flex: none; color: var(--accent); margin-top: .12rem; }
+
+.side-list { list-style: none; }
+.side-list li {
+  position: relative;
+  padding-left: .95rem;
+  font-size: calc(9.57pt * min(var(--fit), 1)); line-height: 1.45;
+  margin-bottom: .68rem;
+}
+.side-list li::before {
+  content: ""; position: absolute; left: 0; top: .55em;
+  width: .3rem; height: .3rem; border-radius: 50%;
+  background: var(--ink);
+}
+.side-list.awards li { font-size: calc(8.53pt * min(var(--fit), 1)); margin-bottom: .74rem; line-height: 1.4; }
+.side-list.awards li::before { background: var(--ink-soft); }
+
+/* 引言色块：贴左栏底部，右上角大圆角，模拟原版几何块 */
+.quote {
+  margin: auto -1.7rem 0;          /* auto 顶推到底；负 margin 出血到栏边 */
+  background: var(--accent-blob);
+  color: #fff;
+  padding: 2.5rem 1.7rem 2.2rem;
+  border-top-right-radius: 42mm;
+}
+.quote .mark {
+  font-size: 3.2rem; line-height: .6; opacity: .34; display: block; margin-bottom: .5rem;
+}
+.quote p { font-size: 1.08rem; font-weight: 600; line-height: 1.75; }
+
+/* ── 右栏 ────────────────────────────────────────────── */
+.main { flex: 1; padding: 2.6rem 2.3rem 2.2rem; min-width: 0; }
+
+.name {
+  font-size: 3.05rem; font-weight: 700; color: var(--name);
+  line-height: 1.06; letter-spacing: .01em;
+}
+.name .alias { font-size: 1.65rem; font-weight: 700; margin-left: .35rem; }
+.title {
+  color: var(--accent); font-weight: 700;
+  font-size: 1.2rem; margin-top: .7rem;
+}
+
+/* 徽章行。3 个时 flex:1 均分、用竖线隔开；只有 1 个时不能均分——
+   否则那一个会被抻满整行，图标孤零零挂在最左边。 */
+.badges { display: flex; gap: 0; margin: 1.5rem 0 1.3rem; }
+.badge {
+  flex: 1; display: flex; align-items: center; gap: .62rem;
+  padding-right: .7rem;
+}
+.badges[data-n="1"] .badge { flex: 0 1 auto; }
+.badge + .badge { border-left: 1px solid #DDE4F2; padding-left: 1rem; }
+.badge-ico {
+  width: 2.35rem; height: 2.35rem; flex: none;
+  border-radius: 50%; background: #E8EEFC; color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+}
+.badge-ico svg { width: 1.35rem; height: 1.35rem; }
+.badge b { display: block; font-size: calc(10.4pt * min(var(--fit), 1)); line-height: 1.25; }
+.badge span { display: block; font-size: calc(8.74pt * min(var(--fit), 1)); color: var(--ink-soft); margin-top: .1rem; }
+
+.rule { height: 1px; background: #DDE4F2; margin: 0 0 1.5rem; }
+
+/* --sec-extra：内容偏少时脚本把剩余高度分摊到段间距，避免下半页大片空白。
+   末段不加，否则补白全堆在页面最底部，等于没分摊。 */
+.sec { margin-bottom: calc(1.6rem + var(--sec-extra, 0px)); }
+.sec:last-child { margin-bottom: 1.6rem; }
+.sec-h {
+  display: flex; align-items: center; gap: .55rem;
+  margin-bottom: .9rem;
+}
+.sec-h svg { width: 1.5rem; height: 1.5rem; color: var(--accent); flex: none; }
+.sec-h .cn { font-size: 1.28rem; font-weight: 700; color: var(--accent); }
+.sec-h .en { font-size: 1.1rem; font-weight: 600; color: var(--accent-soft); letter-spacing: .01em; }
+
+.intro { font-size: .95rem; line-height: 1.72; }
+
+/* 工作经历时间轴 */
+.tl-role {
+  color: var(--accent); font-weight: 700; font-size: 1.04rem;
+  margin: 0 0 .8rem;
+}
+.tl-role + .tl-role, .tl-group + .tl-group { margin-top: 1.1rem; }
+.tl-item {
+  display: grid;
+  grid-template-columns: 6.6rem 1.1rem 1fr;
+  column-gap: .55rem;
+  padding-bottom: .85rem;
+}
+.tl-item:last-child { padding-bottom: 0; }
+.tl-period { font-size: .92rem; color: var(--ink); padding-top: .1rem; }
+.tl-axis { position: relative; }
+.tl-axis::before {                     /* 圆点 */
+  content: ""; position: absolute; left: 50%; top: .45rem;
+  width: .48rem; height: .48rem; margin-left: -.24rem;
+  border-radius: 50%; background: var(--accent);
+}
+.tl-axis::after {                      /* 竖线 */
+  content: ""; position: absolute; left: 50%; top: 1.05rem; bottom: -.85rem;
+  width: 1px; margin-left: -.5px; background: #C9D6F0;
+}
+.tl-item:last-child .tl-axis::after { display: none; }
+.tl-text { font-size: .95rem; line-height: 1.62; }
+
+/* 核心竞争力卡片 */
+.cards { display: flex; flex-direction: column; gap: .62rem; }
+.cardx {
+  display: flex; align-items: flex-start; gap: .95rem;
+  background: var(--card); border-radius: 2mm;
+  padding: .85rem 1.05rem;
+}
+.cardx-ico {
+  width: 2.5rem; height: 2.5rem; flex: none;
+  border: 1.4px solid var(--accent); border-radius: 1.5mm;
+  color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+}
+.cardx-ico svg { width: 1.4rem; height: 1.4rem; }
+.cardx b { display: block; font-size: 1rem; margin-bottom: .18rem; }
+.cardx p { font-size: .92rem; line-height: 1.6; }
