@@ -27,12 +27,21 @@ playwright install chromium          # 首次需要，约 150MB
 ## 工作流程
 
 1. **读取素材** —— 用户给的 md / docx / 文本全部读一遍。docx 用 `python-docx`
-2. **抽取成 YAML** —— 按下方数据契约整理。**这一步是语义判断，不要写解析器**：挑哪三条够格当徽章、把长 bullet 压成卡片两行、判断哪三项算「核心竞争力」，都是判断题
+2. **抽取成 YAML 并归档到 `data/`** —— 按下方数据契约整理。**这一步是语义判断，不要写解析器**：挑哪三条够格当徽章、把长 bullet 压成卡片两行、判断哪三项算「核心竞争力」，都是判断题
    - **事实不得编造或美化**。原始材料里没有的，字段留空；数字、奖项名称、公司名逐字照抄
    - 材料自相矛盾时**问用户**，不要自己选一个
+   - **创建即自动隔离**：用户标识从姓名推断（拼音）或询问。先一键建好隔离目录，再把 YAML 写进去——
+     ```bash
+     # 在 data/<用户>/ 下建隔离目录 + 脚手架；有照片则一并拷入并自动设好 photo 字段
+     python scripts/render_user.py new <用户> [--photo 照片路径]
+     ```
+     然后把抽取出的字段写回 `data/<用户>/me.yaml`（name 必填）。**不要让用户手动 mkdir/cp——简历一旦创建就自动罗盘到 `data/` 实现隔离。**
 3. **渲染**
    ```bash
-   python scripts/render_resume.py 数据.yaml -o 输出目录
+   # 渲染 data/<用户>/me.yaml → 同目录 data/<用户>/（源与成品同处一文件夹，产物同样被 git 忽略）
+   python scripts/render_user.py <用户>
+   # 等价于：python scripts/render_resume.py data/<用户>/me.yaml
+   #         （不传 -o 时，底层默认把 PDF/PNG/HTML 输出到 YAML 所在目录）
    ```
 4. **亲自看一遍** —— 用 Read 工具打开生成的 PNG，确认没跑版、没截断、照片构图正常。**不要跑完脚本就说做完了**
 5. **报告** —— 给出 PDF / PNG 路径，说明自检结果（页数、文字层字符数、缩放比例）
@@ -95,6 +104,23 @@ labels:                          # 覆盖段落标题，做英文简历时整块
 ```
 
 段落渲染顺序固定：自我介绍 → 工作经历 → 教育背景 → 项目经历 → 核心竞争力。
+
+## 用户数据目录（data/）与隔离
+
+每个用户的源数据放在 `data/<用户标识>/` 下（YAML + 照片），与模板 / 脚本 / 示例**物理隔离**。
+`<用户标识>` 建议用人名拼音或 GitHub 用户名，例如 `data/覃翘/`、`data/zhangsan/`。
+
+隔离分三层：
+
+- **目录隔离**：每个用户一个隔离子目录，互不可见、互不干扰；删某用户即删其整目录。
+- **Git 隔离**：`data/*` 已在 `.gitignore` 忽略（仅留 `data/.gitkeep` 维持骨架），
+  即便误 `git add .`，个人信息与照片也**不会进入公开仓库**——本仓库默认远端是公开 GitHub。
+- **源/产物同目录**：`data/<用户>/` 既放源数据（me.yaml + 头像），也放渲染产物
+  （`覃翘_简历.pdf` / `覃翘_简历.png` / `_resume.html`）。一个文件夹就是「某人的完整简历包」，
+  整体拷贝即走；产物与源数据一样被 git 忽略。skill 自带的示例 / 冒烟测试产物则仍落在 `out/`
+  （`out/full`、`out/minimal`、`out/smoke`），与用户数据互不干扰。
+
+新增用户与渲染命令见 `data/README.md`。字段写法沿用上方「数据契约」，除 `name` 外全部可选。
 
 可用 `icon` 值：`person phone mail pin star trophy diamond code chart pencil rocket robot bank briefcase`
 

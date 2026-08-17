@@ -40,15 +40,17 @@ python scripts/render_resume.py examples/full.yaml -o out
 
 `out/` 下会出现三个文件：`*.pdf`（带文字层，投递用）、`*.png`（预览用）、`_resume.html`（想手改样式时直接打开调）。
 
-做自己的简历：
+做自己的简历（多用户隔离版）：
 
 ```bash
-mkdir -p my && cp examples/full.yaml my/me.yaml
-# 把照片放进 my/，改 my/me.yaml 里的 photo 指向它，然后改内容
-python scripts/render_resume.py my/me.yaml -o out
+mkdir -p data/你的名字 && cp examples/full.yaml data/你的名字/me.yaml
+# 把照片放进 data/你的名字/，改 me.yaml 里的 photo 指向它，然后改内容
+python scripts/render_resume.py data/你的名字/me.yaml -o data/你的名字
 ```
 
-`my/` 已在 `.gitignore` 里，个人信息不会被误提交。
+`data/` 下每个用户一个隔离子目录，已被 `.gitignore` 忽略，**个人信息与照片不会误提交到公开仓库**。
+更省事的方式是用多用户助手：`python scripts/render_user.py new 你的名字 [--photo 照片路径]` 一步建好隔离目录与脚手架，`python scripts/render_user.py 你的名字` 渲染（自动 `data/<id>/me.yaml → data/<id>/`，源与成品同目录）。
+隔离模型、目录结构与新增用户命令见 [`data/README.md`](data/README.md)。
 
 ## 数据长什么样
 
@@ -185,12 +187,16 @@ SKILL.md 里明确写了**事实不得编造或美化，材料里没有的字段
 
 ```
 ├── SKILL.md                    给 AI 编程助手看的技能说明
+├── data/                       用户数据（多用户隔离，git 忽略，不上传）
+│   ├── .gitkeep                维持空目录骨架（会被提交）
+│   └── <用户>/                 ｜每个人一个隔离子目录：me.yaml + 照片
 ├── template/
 │   ├── resume.html.j2          版面结构（Jinja2）
 │   ├── style.css               设计令牌 + 全部样式
 │   └── icons.html              14 个内联 SVG 图标，零网络依赖
 ├── scripts/
 │   ├── render_resume.py        YAML → PDF + PNG，含一页自适应与自检
+│   ├── render_user.py          多用户助手：data/<id>/me.yaml → out/<id>/
 │   └── make_placeholder.py     生成示例用的合成占位人像
 ├── tests/
 │   └── smoke.py                人物矩阵 + 错误路径断言 + 产物拼版

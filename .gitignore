@@ -13,6 +13,11 @@ venv/
 # 个人数据：把自己的 YAML 和照片放在 my/ 下，不会被提交
 my/
 
+# 用户数据（多用户隔离）：data/ 下每个用户一个隔离子目录，不会被提交
+# 仅保留 .gitkeep 维持空目录骨架
+data/*
+!data/.gitkeep
+
 # 编辑器 / 系统
 .vscode/
 .idea/
