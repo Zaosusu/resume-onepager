@@ -23,3 +23,6 @@ data/*
 .idea/
 .DS_Store
 Thumbs.db
+
+# 本机权限配置（可能含本地凭据，绝不入库）
+.claude/settings.local.json
